@@ -1,0 +1,16 @@
+{
+  "exploration_steps": 141,
+  "cells_revealed": 39949,
+  "coverage_percent": 99.9,
+  "final_path_waypoints": 32,
+  "motion_segments": 31,
+  "start": [
+    10,
+    10
+  ],
+  "goal": [
+    80,
+    130
+  ],
+  "map_type": "walls"
+}

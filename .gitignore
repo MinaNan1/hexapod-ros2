@@ -1,0 +1,34 @@
+# colcon / ROS 2
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# recordings and maps
+*.bag
+*.db3
+*.db
+maps/
+
+# local calibration output
+camera_calibration.yaml
+workspace_homography.yaml
+
+# editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+*.bak
+*.bak.*
+
+# third-party packages cloned by scripts/ (see README)
+ros2_ws/src/OrbbecSDK_ROS2/
+ros2_ws/src/rf2o_laser_odometry/

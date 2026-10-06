@@ -1,0 +1,28 @@
+{
+  "configById": {
+    "3D!3dmap": {
+      "layers": {},
+      "followTf": "base_link",
+      "scene": { "backgroundColor": "#303030" },
+      "topics": {
+        "/rtabmap/cloud_map": { "visible": true, "colorField": "z", "colorMode": "colormap", "colorMap": "turbo", "pointSize": 2 },
+        "/rtabmap/map": { "visible": true },
+        "/scan": { "visible": true, "colorField": "intensity", "pointSize": 4 },
+        "/rtabmap/mapPath": { "visible": true },
+        "/tf": { "visible": true },
+        "/robot_description": { "visible": true }
+      },
+      "title": "3D Map"
+    },
+    "Image!camera": {
+      "imageMode": { "imageTopic": "/camera/color/image_raw/compressed" },
+      "title": "Camera"
+    }
+  },
+  "layout": {
+    "first": "3D!3dmap",
+    "second": "Image!camera",
+    "direction": "row",
+    "splitPercentage": 68
+  }
+}

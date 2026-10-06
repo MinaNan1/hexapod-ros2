@@ -1,0 +1,136 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /MapCloud1
+      Splitter Ratio: 0.5
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Color: 160; 160; 164
+      Plane Cell Count: 20
+      Cell Size: 1
+      Enabled: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Names: true
+      Marker Scale: 0.4
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 1
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+      Enabled: true
+      Visual Enabled: true
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Topic:
+        Value: /scan
+        Depth: 5
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+      Color: 255; 40; 40
+      Size (m): 0.03
+      Style: Spheres
+      Enabled: true
+    - Class: rviz_default_plugins/Map
+      Name: Map
+      Topic:
+        Value: /rtabmap/map
+        Depth: 1
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+      Color Scheme: map
+      Enabled: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: MapCloud
+      Topic:
+        Value: /rtabmap/cloud_map
+        Depth: 1
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+      Selectable: true
+      Style: Points
+      Size (Pixels): 3
+      Decay Time: 0
+      Position Transformer: XYZ
+      Color Transformer: AxisColor
+      Axis: Z
+      Enabled: true
+    - Class: rviz_default_plugins/Path
+      Name: Trajectory
+      Topic:
+        Value: /rtabmap/mapPath
+        Depth: 5
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+      Color: 0; 255; 255
+      Enabled: true
+    - Class: rtabmap_rviz_plugins/MapCloud
+      Name: RtabmapCloud
+      Topic:
+        Value: /rtabmap/mapData
+        Depth: 1
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+      Cloud decimation: 4
+      Cloud max depth (m): 4.0
+      Cloud voxel size (m): 0.02
+      Download map: false
+      Enabled: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: DepthCloud
+      Topic:
+        Value: /camera/depth/points
+        Depth: 5
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+      Selectable: false
+      Style: Points
+      Size (Pixels): 3
+      Decay Time: 25
+      Position Transformer: XYZ
+      Color Transformer: AxisColor
+      Axis: Z
+      Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 6
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.6
+      Yaw: 0.8
+      Name: Orbit
+Window Geometry:
+  Height: 900
+  Width: 1400

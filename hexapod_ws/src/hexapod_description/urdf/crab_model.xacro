@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="crab">
+
+    <link name="base_link" />
+
+    <!--
+        base_link sits at the ground plane — that's the robot's navigation
+        point.  The thorax is lifted by the hexapod's standing height so the
+        leg tips (computed by the IK in hexapod_kinematics) land on z = 0.
+
+        Matches `STANCE_HEIGHT` in
+        hexapod_ws/src/hexapod_control/hexapod_control/hexapod_kinematics.py
+        (110 mm).  If you change STANCE_HEIGHT there, update here too.
+    -->
+    <xacro:property name="body_standing_height" value="0.110" />
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="thorax" />
+        <origin xyz="0 0 ${body_standing_height}" rpy="0 0 0" />
+    </joint>
+
+    <!-- STLs exported in metres from SolidWorks — no scale factor needed -->
+    <link name="thorax">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://hexapod_description/meshes/body_link.STL"
+                      scale="0.001 0.001 0.001" />
+            </geometry>
+            <material name="black">
+                <color rgba="0.1 0.1 0.1 1" />
+            </material>
+        </visual>
+    </link>
+
+    <xacro:property name="joint_lower_limit" value="-1.57" />
+    <xacro:property name="joint_upper_limit" value="1.57" />
+    <xacro:property name="joint_effort"      value="10.0" />
+    <xacro:property name="joint_velocity"    value="1.0" />
+
+    <!--
+        Link lengths — must match `DIMENSIONS` in
+        hexapod_ws/src/hexapod_control/hexapod_control/hexapod_kinematics.py
+        (the new Hiwonder HX-35HM v3 design):
+          Coxa  =  60.00 mm = 0.06000 m  → femur_joint x offset
+          Femur = 179.62 mm = 0.17962 m  → tibia_joint x offset
+          Tibia = 141.16 mm = 0.14116 m  → foot_joint  x offset
+
+        Mesh files (coxa_link.STL / femur_link.STL / tibia_link.STL /
+        body_link.STL) were re-exported in metres from the v3 design — drop
+        in replacements at the original filenames, no scale factor needed.
+
+        mirror_sign:  1 for right legs (no flip)
+                     -1 for left  legs (mirror mesh across Y axis)
+        Single STL per link, left side mirrored via the scale attribute
+        (scale="0.001 ${0.001 * mirror_sign} 0.001").
+
+        Leg attachment positions — must match `LEG_ATTACH` in
+        hexapod_kinematics.py (mm → m):
+          r1 / l3 (front):  x = ±0.11227, y = ∓/±0.12133
+          r2 / l2 (middle): x =  0.0,     y = ∓/±0.13240
+          r3 / l1 (rear):   x = ∓0.11227, y = ∓/±0.12133
+
+        ⚠  NAMING CONVENTION (changed for the new controller):
+          - right side: r1 = front, r2 = middle, r3 = back  (unchanged)
+          - left  side: l3 = front, l2 = middle, l1 = back  (l1 / l3 swapped
+            from the old controller's convention to match the new
+            controller's `_SUFFIX` map and the Hiwonder servo bridge's
+            servo-ID layout).
+
+        Coxa angles computed as atan2(y, x) of each attachment point so the
+        leg's local +X axis always points directly outward from the body.
+    -->
+    <xacro:macro name="leg" params="side num x y angle mirror_sign">
+
+        <!-- True reflection via negative Y scale for left-side meshes. -->
+        <xacro:property name="mesh_scale_y" value="${0.001 * mirror_sign}" />
+
+        <!-- 180° X rotation on left femur & tibia only (not coxa).
+             flip_x = 0  for right legs, π for left legs. -->
+        <xacro:property name="flip_x" value="${(1 - mirror_sign) * pi / 2}" />
+
+        <!-- ═══ TUNABLE OFFSETS — edit these and run ./tune.sh ═══ -->
+        <xacro:property name="femur_dx" value="-0.0165" />
+        <xacro:property name="femur_dy" value="-0.005" />
+        <xacro:property name="femur_dz" value="0.0" />
+
+        <xacro:property name="tibia_dx" value="-0.05" />
+        <xacro:property name="tibia_dy" value="0.125" />
+        <xacro:property name="tibia_dz" value="0.0" />
+
+        <!-- Fixed frame anchored on thorax at the leg's attachment point -->
+        <joint name="leg_center_joint_${side}${num}" type="fixed">
+            <origin xyz="${x} ${y} 0" rpy="0 0 0" />
+            <parent link="thorax" />
+            <child link="leg_center_${side}${num}" />
+        </joint>
+        <link name="leg_center_${side}${num}" />
+
+        <!-- COXA — yaw (Z rotation) -->
+        <joint name="coxa_joint_${side}${num}" type="revolute">
+            <origin xyz="0 0 0" rpy="0 0 ${angle}" />
+            <parent link="leg_center_${side}${num}" />
+            <child link="coxa_${side}${num}" />
+            <axis xyz="0 0 1" />
+            <limit lower="${joint_lower_limit}" upper="${joint_upper_limit}"
+                   effort="${joint_effort}" velocity="${joint_velocity}" />
+        </joint>
+        <link name="coxa_${side}${num}">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="package://hexapod_description/meshes/coxa_link.STL"
+                          scale="0.001 ${mesh_scale_y} 0.001" />
+                </geometry>
+                <material name="black"><color rgba="0.1 0.1 0.1 1" /></material>
+            </visual>
+        </link>
+
+        <!-- FEMUR — pitch. rpy="-pi/2 0 0" rotates child frame so its Z
+             (rotation axis) becomes the pitch axis in the coxa frame. -->
+        <joint name="femur_joint_${side}${num}" type="revolute">
+            <origin xyz="0.06000 0 0" rpy="${pi/2} 0 0" />
+            <parent link="coxa_${side}${num}" />
+            <child link="femur_${side}${num}" />
+            <axis xyz="0 0 1" />
+            <limit lower="${joint_lower_limit}" upper="${joint_upper_limit}"
+                   effort="${joint_effort}" velocity="${joint_velocity}" />
+        </joint>
+        <link name="femur_${side}${num}">
+            <visual>
+                <origin xyz="${femur_dx} ${femur_dy} ${femur_dz}" rpy="${flip_x} 0 0" />
+                <geometry>
+                    <mesh filename="package://hexapod_description/meshes/femur_link.STL"
+                          scale="0.001 ${mesh_scale_y} 0.001" />
+                </geometry>
+                <material name="black"><color rgba="0.1 0.1 0.1 1" /></material>
+            </visual>
+        </link>
+
+        <!-- TIBIA — pitch -->
+        <joint name="tibia_joint_${side}${num}" type="revolute">
+            <origin xyz="0.17962 0 0" rpy="${pi} 0 -${pi/2}" />
+            <parent link="femur_${side}${num}" />
+            <child link="tibia_${side}${num}" />
+            <axis xyz="0 0 1" />
+            <limit lower="${joint_lower_limit}" upper="${joint_upper_limit}"
+                   effort="${joint_effort}" velocity="${joint_velocity}" />
+        </joint>
+        <link name="tibia_${side}${num}">
+            <visual>
+                <origin xyz="${tibia_dx} ${tibia_dy} ${tibia_dz}" rpy="${flip_x} 0 0" />
+                <geometry>
+                    <mesh filename="package://hexapod_description/meshes/tibia_link.STL"
+                          scale="0.001 ${mesh_scale_y} 0.001" />
+                </geometry>
+                <material name="black"><color rgba="0.1 0.1 0.1 1" /></material>
+            </visual>
+        </link>
+
+        <!-- Virtual foot-tip (used by IK / contact detection) -->
+        <joint name="tibia_foot_joint_${side}${num}" type="fixed">
+            <origin xyz="0.14116 0 0" rpy="0 0 0" />
+            <parent link="tibia_${side}${num}" />
+            <child link="tibia_foot_${side}${num}" />
+        </joint>
+        <link name="tibia_foot_${side}${num}" />
+
+    </xacro:macro>
+
+    <!-- Angles = atan2(y_attach, x_attach) so coxa +X points outward     -->
+    <!-- Right legs — r1 front, r2 middle, r3 back (no mesh flip)         -->
+    <xacro:leg side="r" num="1" x="0.11227"  y="-0.12133" angle="${atan2(-0.12133,  0.11227)}" mirror_sign="1" />
+    <xacro:leg side="r" num="2" x="0.0"      y="-0.13240" angle="-${pi/2}"                     mirror_sign="1" />
+    <xacro:leg side="r" num="3" x="-0.11227" y="-0.12133" angle="${atan2(-0.12133, -0.11227)}" mirror_sign="1" />
+
+    <!-- Left legs — NEW convention: l3 front, l2 middle, l1 back          -->
+    <!-- (l1 and l3 swapped vs. legacy URDF — matches the new controller's -->
+    <!--  _SUFFIX map and the Hiwonder servo bridge's servo-ID layout.)    -->
+    <xacro:leg side="l" num="3" x="0.11227"  y="0.12133"  angle="${atan2( 0.12133,  0.11227)}" mirror_sign="-1" />
+    <xacro:leg side="l" num="2" x="0.0"      y="0.13240"  angle="${pi/2}"                      mirror_sign="-1" />
+    <xacro:leg side="l" num="1" x="-0.11227" y="0.12133"  angle="${atan2( 0.12133, -0.11227)}" mirror_sign="-1" />
+
+</robot>

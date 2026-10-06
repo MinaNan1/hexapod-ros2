@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hexapod Command Center</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- ROS and Joystick Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1.3.0/build/roslib.min.js"></script>
+</head>
+
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="glass-panel">
+            <div class="logo">
+                <span class="icon">🕷️</span>
+                <h1>HEXAPOD <span class="accent">OS</span></h1>
+            </div>
+            <div class="connection-status-group">
+                <div class="connection-status">
+                    <div class="status-indicator" id="ros-status"></div>
+                    <span id="ros-status-text">Connecting to ROS...</span>
+                </div>
+                <div class="connection-status">
+                    <div class="status-indicator" id="gamepad-status"></div>
+                    <span id="gamepad-status-text">🎮 No Gamepad</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard">
+            <!-- Left Column: Controls -->
+            <section class="control-panel glass-panel">
+                <h2>Mode Selection</h2>
+                <div class="mode-toggle">
+                    <button id="btn-manual" class="mode-btn active">MANUAL</button>
+                    <button id="btn-auto" class="mode-btn">AUTO (PLANNER)</button>
+                </div>
+
+                <div class="spacer"></div>
+
+                <h2>Manual Override</h2>
+                <div class="macro-buttons" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="btn-fwd" class="action-btn">FORWARD</button>
+                    <button id="btn-bwd" class="action-btn">BACKWARD</button>
+                    <button id="btn-stop" class="action-btn danger">STOP</button>
+                </div>
+
+                <div class="joystick-container">
+                    <div id="joystick-zone"></div>
+                    <div class="joystick-overlay">
+                        <span class="crosshair vertical"></span>
+                        <span class="crosshair horizontal"></span>
+                    </div>
+                </div>
+                <p class="help-text">Drag joystick to move and steer</p>
+            </section>
+
+            <!-- Right Column: Telemetry & Posture -->
+            <section class="telemetry-panel glass-panel">
+
+                <h2>Body Posture</h2>
+                <div class="sliders-container">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Roll (rx)</span>
+                            <span class="slider-value highlight" id="val-roll">0.0°</span>
+                        </div>
+                        <input type="range" id="slider-roll" class="styled-slider" min="-12" max="12" step="0.5"
+                            value="0">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Pitch (ry)</span>
+                            <span class="slider-value highlight" id="val-pitch">0.0°</span>
+                        </div>
+                        <input type="range" id="slider-pitch" class="styled-slider" min="-12" max="12" step="0.5"
+                            value="0">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Yaw (rz)</span>
+                            <span class="slider-value highlight" id="val-yaw">0.0°</span>
+                        </div>
+                        <input type="range" id="slider-yaw" class="styled-slider" min="-20" max="20" step="0.5"
+                            value="0">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Height (tz)</span>
+                            <span class="slider-value highlight" id="val-tz">0.0 mm</span>
+                        </div>
+                        <input type="range" id="slider-tz" class="styled-slider" min="-20" max="20" step="0.5"
+                            value="0">
+                    </div>
+
+                    <button id="btn-reset-pose" class="action-btn" style="margin-top: 10px; width: 100%;">RESET
+                        POSE</button>
+                </div>
+
+                <div class="spacer"></div>
+
+                <h2>Emotes</h2>
+                <div class="emotes-container">
+                    <button class="emote-btn" data-emote="wave">👋 Wave</button>
+                    <button class="emote-btn" data-emote="dance">💃 Dance</button>
+                    <button class="emote-btn" data-emote="bow">🎩 Bow</button>
+                    <button class="emote-btn" data-emote="stretch">🙆 Stretch</button>
+                    <button class="emote-btn" data-emote="wiggle">🐛 Wiggle</button>
+                    <button class="emote-btn" data-emote="excited">🎉 Excited</button>
+                    <button id="btn-trump" class="emote-btn" data-emote="trump">🕺 Trump</button>
+                    <button id="btn-salute" class="emote-btn" data-emote="salute">🫡Hitler</button>
+                </div>
+                <p class="help-text" id="emote-status"></p>
+
+                <div class="spacer"></div>
+
+                <h2>Telemetry</h2>
+
+                <div class="telemetry-grid">
+                    <div class="data-card">
+                        <span class="data-label">Linear Vel (Y)</span>
+                        <span class="data-value" id="val-linear-y">0.00</span>
+                    </div>
+                    <div class="data-card">
+                        <span class="data-label">Angular Vel (Z)</span>
+                        <span class="data-value" id="val-angular-z">0.00</span>
+                    </div>
+                    <div class="data-card">
+                        <span class="data-label">State</span>
+                        <span class="data-value highlight" id="val-state">IDLE</span>
+                    </div>
+                </div>
+
+                <div class="spacer"></div>
+
+                <h2>System Logs</h2>
+                <div class="log-console" id="log-console">
+                    <div class="log-entry system">System initialized. Waiting for ROS connection.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Main Logic -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

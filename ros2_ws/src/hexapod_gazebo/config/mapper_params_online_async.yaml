@@ -1,0 +1,70 @@
+slam_toolbox:
+  ros__parameters:
+    # Plugin params
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_region_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # ROS Parameters
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    use_map_saver: true
+    mode: mapping
+
+    #map_file_name: test_steve
+    #map_start_pose: [0.0, 0.0, 0.0]
+    #map_start_at_dock: true
+
+    debug_logging: false
+    throttle_scans: 1
+    transform_publish_period: 0.02    # 50Hz TF (was 0.05)
+    map_update_interval: 0.3          # Faster map updates (was 1.0)
+    resolution: 0.1
+    max_laser_range: 3.0              # Keeps the map clean by ignoring far noise
+    minimum_time_interval: 0.1        # Restored to 10Hz for fast, smooth TF tracking
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 40000000
+
+    # General Parameters
+    use_scan_matching: true
+    use_scan_barycenter: false        # False helps prevent the map from smearing during rotation
+    minimum_travel_distance: 0.0      # MUST be 0.0 with fake odometry
+    minimum_travel_heading: 0.0        # MUST be 0.0 with fake odometry
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 3.0
+    link_match_minimum_response_fine: 0.1  
+    link_scan_maximum_distance: 1.5
+    loop_search_maximum_distance: 3.0
+    do_loop_closing: true 
+    loop_match_minimum_chain_size: 10           
+    loop_match_maximum_variance_coarse: 3.0  
+    loop_match_minimum_response_coarse: 0.35    
+    loop_match_minimum_response_fine: 0.45
+
+    # Correlation Parameters
+    correlation_search_space_dimension: 2.0
+    correlation_search_space_resolution: 0.01   # Tighter: 1cm precision (was 2cm)
+    correlation_search_space_smear_deviation: 0.1  # Tighter: less blur per cell (was 0.2)
+
+    # Loop Closure Parameters
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    # Scan Matcher Parameters
+    # Lower variance penalties = SLAM trusts scan matching MORE than fake odometry
+    distance_variance_penalty: 0.3      # Was 0.5 — trust scan matching position more
+    angle_variance_penalty: 0.5         # Was 1.0 — trust scan matching rotation more
+
+    fine_search_angle_offset: 0.00349     
+    coarse_search_angle_offset: 0.349   
+    coarse_angle_resolution: 0.0174     # Finer angular search: ~1 deg (was ~2 deg)
+    minimum_angle_penalty: 0.95         # Was 0.9 — stricter angular match required
+    minimum_distance_penalty: 0.6       # Was 0.5 — stricter distance match required
+    use_response_expansion: true

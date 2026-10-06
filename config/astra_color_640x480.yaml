@@ -1,0 +1,27 @@
+# Approximate intrinsics for the Astra Pro UVC color camera at 640x480.
+# Purpose: satisfy RTAB-Map's "calibrated camera required" check so it can
+# project depth into the 3D cloud_map. These are nominal Astra-family values
+# (fx=fy~570, principal point at image center), NOT a per-unit calibration.
+# Good enough for a visually correct (slightly scaled) 3D cloud. For a metric-
+# accurate cloud, run the ros2 camera_calibration chessboard procedure and
+# replace this file.
+image_width: 640
+image_height: 480
+camera_name: astra_pro_hd_camera
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [570.0, 0.0, 319.5, 0.0, 570.0, 239.5, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [570.0, 0.0, 319.5, 0.0, 0.0, 570.0, 239.5, 0.0, 0.0, 0.0, 1.0, 0.0]
