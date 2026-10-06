@@ -1,0 +1,6 @@
+# Keep LF line endings so the shell scripts and Python nodes run on Linux,
+# even when the repo is cloned or edited on Windows.
+* text=auto eol=lf
+*.png binary
+*.STL binary
+*.stl binary
